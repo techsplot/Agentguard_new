@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import RegisterAgent from './pages/RegisterAgent';
 import Logs from './pages/Logs';
 import Login from './pages/Login';
+import { interact } from './server/api/interact';
 
 // Mock Data
 const initialAgents: Agent[] = [
@@ -104,18 +105,37 @@ const App: React.FC = () => {
         setCurrentPage(Page.Dashboard);
     }, []);
 
+    const handleSimulateAction = useCallback(async (agent: Agent, action: string) => {
+        const response = await interact(agent, action);
+
+        const newLog: Log = {
+            id: `log-${Date.now()}`,
+            agentName: agent.name,
+            action: `Simulated: ${action}`,
+            timestamp: new Date().toISOString(),
+            result: response.success ? 'allowed' : 'denied',
+        };
+        setLogs(prev => [newLog, ...prev]);
+        
+        if (response.success) {
+            alert(`✅ ALLOWED\n\nMessage: ${response.message}\nToken: ${response.token.token}\nExpires At: ${new Date(response.token.expiresAt).toLocaleTimeString()}`);
+        } else {
+            alert(`❌ DENIED\n\nMessage: ${response.message}`);
+        }
+    }, []);
+
     const pageContent = useMemo(() => {
         switch (currentPage) {
             case Page.Dashboard:
-                return <Dashboard agents={agents} setCurrentPage={setCurrentPage} />;
+                return <Dashboard agents={agents} setCurrentPage={setCurrentPage} onSimulateAction={handleSimulateAction} />;
             case Page.RegisterAgent:
                 return <RegisterAgent addAgent={addAgent} setCurrentPage={setCurrentPage}/>;
             case Page.Logs:
                 return <Logs logs={logs} />;
             default:
-                return <Dashboard agents={agents} setCurrentPage={setCurrentPage} />;
+                return <Dashboard agents={agents} setCurrentPage={setCurrentPage} onSimulateAction={handleSimulateAction} />;
         }
-    }, [currentPage, agents, logs, addAgent]);
+    }, [currentPage, agents, logs, addAgent, handleSimulateAction]);
 
     if (!isAuthenticated) {
         return <Login login={login} />;
