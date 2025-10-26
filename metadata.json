@@ -1,0 +1,5 @@
+{
+  "name": "AgentGuard",
+  "description": "A secure management platform for companies to register, monitor, and authorize their AI agents using Auth0 for AI Agents.",
+  "requestFramePermissions": []
+}
